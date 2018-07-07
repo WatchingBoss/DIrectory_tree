@@ -6,15 +6,20 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h> /* getcwd(); */
-#include <dirent.h> /* opendir(); */
+#include <stdarg.h>
+#include <unistd.h> /* getcwd(); getopt(); */
+#include <dirent.h> /* opendir(); readdir(); */
 
 #include "include/tree.h"
+
+#define OPTIONS "af::"
+
+bool print_disappeared = false;
 
 int existing_directory(const char *directory)
 {
 	DIR *dir;
-	if( (dir = opendir(directory) ) == NULL)
+	if( !(dir = opendir(directory)) )
 		return 0;
 	closedir(dir);
 	return 1;
@@ -23,7 +28,8 @@ int existing_directory(const char *directory)
 char *current_directory()
 {
 	static char current_dir[256];
-	getcwd(current_dir, sizeof(current_dir));
+	if( !getcwd(current_dir, sizeof(current_dir)) )
+		system_error("getcwd error");
 	return current_dir;
 }
 
@@ -32,14 +38,28 @@ void print_list()
 
 }
 
-void sort_alphabetic()
+void sort_alphabeticly()
 {
 
 }
 
 void read_stream(const char *directory)
 {
-	
+	DIR *dir;
+	struct dirent *dp;
+
+	if( !(dir = opendir(directory)) )
+		user_error("No such directory: %s", directory);
+
+	int i = 1;
+	while( (dp = readdir(dir)) != NULL)
+	{
+		if( !strcmp(dp->d_name, ".") || !strcmp(dp->d_name, "..") )
+			continue;
+		if(!print_disappeared && dp->d_name[0] == '.')
+			continue;
+		printf("%d - %s\n", i++, dp->d_name);
+	}
 }
 
 void read_input(int argc, char *argv[])
@@ -51,44 +71,50 @@ void read_input(int argc, char *argv[])
 		if(!defined_path && existing_directory(argv[i]) )
 			defined_path = true;
 			
-		if(!strcmp(argv[i], "-f"))
+		if(argv[i][0] == '-')
 			continue;
 
 		read_stream(argv[i]);
 	}
-
 	if(!defined_path)
 		read_stream(current_directory() );
 }
 
 int main(int argc, char *argv[])
 {
+	char option;
+	while( (option = getopt(argc, argv, OPTIONS)) > 0 )
+	{
+		switch(option)
+		{
+			case 'a':
+				print_disappeared = true;
+				break;
+			case 'f':
+				break;
+			default:
+				break;
+		}
+	}
+
 	read_input(argc, argv);
 
 	
 	exit(EXIT_SUCCESS);
 }
 
-/*
+void user_error(const char *e, ...)
+{
+	va_list(args);
+	va_start(args, e);
+	vprintf(e, args);
+	va_end(args);
+	printf("\n");
+	exit(EXIT_FAILURE);
+}
 
-Algorithm:
-1. Read input to program
-2. Loop #1:
-1) Read strem from first directory
-2) Sort names in alphabetical order
-3) Print names of files
-4) If file is directory
-Use loop #1
-5) 
-
-
-dir1
-    | file1
-    | dir1
-        | dir1
-    | dir2
-        | dir1
-    | dir3
-        | dir1
-
-*/
+void system_error(const char *e)
+{
+	perror(e);
+	exit(EXIT_FAILURE);
+}
