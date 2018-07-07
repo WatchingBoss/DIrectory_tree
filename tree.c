@@ -1,6 +1,11 @@
 /*
  * Directory tree implemetation
  * Lists contents of directory in tree-like format
+ * Author: Smirnov Egor (ActionLS)
+ */
+
+/*
+ * TODO: create xmalloc and xrealloc functions to checking memory allocation
  */
 
 #include <stdio.h>
@@ -43,23 +48,34 @@ void sort_alphabeticly()
 
 }
 
-void read_stream(const char *directory)
+void read_and_serve_stream(const char *directory)
 {
 	DIR *dir;
 	struct dirent *dp;
+	char **oldbuf = NULL, **list = NULL;
+	int count = 0;
 
 	if( !(dir = opendir(directory)) )
 		user_error("No such directory: %s", directory);
 
-	int i = 1;
 	while( (dp = readdir(dir)) != NULL)
 	{
 		if( !strcmp(dp->d_name, ".") || !strcmp(dp->d_name, "..") )
 			continue;
 		if(!print_disappeared && dp->d_name[0] == '.')
 			continue;
-		printf("%d - %s\n", i++, dp->d_name);
+
+		list = (char **)realloc(oldbuf, sizeof(char *) * strlen(dp->d_name) + 1);
+		if(!list)
+			system_error("realloc list error");
+		else
+			oldbuf = list;
+		list[count++] = dp->d_name;
 	}
+	for(int i = 0; i < count; ++i)
+		printf("%d - %s\n", i, list[i]);
+	free(list);
+	free(oldbuf);
 }
 
 void read_input(int argc, char *argv[])
@@ -74,10 +90,10 @@ void read_input(int argc, char *argv[])
 		if(argv[i][0] == '-')
 			continue;
 
-		read_stream(argv[i]);
+		read_and_serve_stream(argv[i]);
 	}
 	if(!defined_path)
-		read_stream(current_directory() );
+		read_and_serve_stream(current_directory() );
 }
 
 int main(int argc, char *argv[])
