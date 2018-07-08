@@ -43,16 +43,18 @@ void print_list()
 
 }
 
-void sort_alphabeticly()
+void sort_alphabeticly(int count, char *list[])
 {
-
+	for(int i = 0; i <= count; ++i)
+		printf("%s\n", list[i]);
 }
 
 void read_and_serve_stream(const char *directory)
 {
 	DIR *dir;
 	struct dirent *dp;
-	char **oldbuf = NULL, **list = NULL;
+	char **temp = xmalloc(sizeof **temp);
+	char **list = xmalloc(sizeof **list);
 	int count = 0;
 
 	if( !(dir = opendir(directory)) )
@@ -65,17 +67,25 @@ void read_and_serve_stream(const char *directory)
 		if(!print_disappeared && dp->d_name[0] == '.')
 			continue;
 
-		list = (char **)realloc(oldbuf, sizeof(char *) * strlen(dp->d_name) + 1);
+		list = xrealloc(temp, sizeof **list * (count + 1));
 		if(!list)
 			system_error("realloc list error");
 		else
-			oldbuf = list;
-		list[count++] = dp->d_name;
+			temp = list;
+		list[count] = xmalloc(strlen(dp->d_name) + 1);
+		strcpy(list[count], dp->d_name);
+		printf("%d %s\n", count, list[count]);
+		++count;
 	}
+	puts("");
+	
 	for(int i = 0; i < count; ++i)
-		printf("%d - %s\n", i, list[i]);
+		printf("%s\n", list[i]);
+
+//	sort_alphabeticly(count - 1, list);
+
 	free(list);
-	free(oldbuf);
+	free(temp);
 }
 
 void read_input(int argc, char *argv[])
@@ -114,23 +124,8 @@ int main(int argc, char *argv[])
 	}
 
 	read_input(argc, argv);
-
 	
 	exit(EXIT_SUCCESS);
 }
 
-void user_error(const char *e, ...)
-{
-	va_list(args);
-	va_start(args, e);
-	vprintf(e, args);
-	va_end(args);
-	printf("\n");
-	exit(EXIT_FAILURE);
-}
 
-void system_error(const char *e)
-{
-	perror(e);
-	exit(EXIT_FAILURE);
-}

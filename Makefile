@@ -1,7 +1,7 @@
 CC = gcc
 CFLAGS = -g -Wall
 
-OBJ = tree.o
+OBJ = tree.o common.o
 OUT = tree
 
 $(OUT): $(OBJ)
