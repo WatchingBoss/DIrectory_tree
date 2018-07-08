@@ -11,6 +11,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 #include <stdarg.h>
 #include <unistd.h> /* getcwd(); getopt(); */
 #include <dirent.h> /* opendir(); readdir(); */
@@ -43,18 +44,54 @@ void print_list()
 
 }
 
+/*
+ * Using bubble sort to sort a case insensitive list of strings in alphabetical order
+ */
+int greater_stirng(const char *s1, const char *s2)
+{
+	char str1[strlen(s1) + 1], str2[strlen(s2) + 1];
+	strcpy(str1, s1);
+	strcpy(str2, s2);
+	for(int i = 0; str1[i] != '\0'; ++i)
+		str1[i] = tolower(str1[i]);
+	for(int i = 0; str2[i] != '\0'; ++i)
+		str2[i] = tolower(str2[i]);
+	if(strcmp(str1, str2) > 0)
+		return 1;
+	else
+		return 0;
+}
+
 void sort_alphabeticly(int count, char *list[])
 {
 	for(int i = 0; i <= count; ++i)
+	{
+		int firstIndex = 0, secondIndex = 1;
+		while(secondIndex <= count)
+		{
+			char *firstString = list[firstIndex];
+			char *secondString = list[secondIndex];
+
+			if(greater_stirng(firstString, secondString))
+			{
+				list[firstIndex] = secondString;
+				list[secondIndex] = firstString;
+			}
+			++firstIndex;
+			++secondIndex;
+		}
+	}
+
+	for(int i = 0; i <= count; ++i)
 		printf("%s\n", list[i]);
 }
+/* ===== End of sorting =====*/
 
 void read_and_serve_stream(const char *directory)
 {
 	DIR *dir;
 	struct dirent *dp;
-	char **temp = xmalloc(sizeof **temp);
-	char **list = xmalloc(sizeof **list);
+	char **temp = NULL, **list = NULL;
 	int count = 0;
 
 	if( !(dir = opendir(directory)) )
@@ -67,22 +104,17 @@ void read_and_serve_stream(const char *directory)
 		if(!print_disappeared && dp->d_name[0] == '.')
 			continue;
 
-		list = xrealloc(temp, sizeof **list * (count + 1));
-		if(!list)
+		temp = xrealloc(list, sizeof *temp * (count + 1));
+		if(!temp)
 			system_error("realloc list error");
 		else
-			temp = list;
+			list = temp;
 		list[count] = xmalloc(strlen(dp->d_name) + 1);
-		strcpy(list[count], dp->d_name);
-		printf("%d %s\n", count, list[count]);
-		++count;
+		strcpy(list[count++], dp->d_name);
 	}
 	puts("");
 	
-	for(int i = 0; i < count; ++i)
-		printf("%s\n", list[i]);
-
-//	sort_alphabeticly(count - 1, list);
+	sort_alphabeticly(count - 1, list);
 
 	free(list);
 	free(temp);
