@@ -1,7 +1,8 @@
 CC = gcc
 CFLAGS = -g -Wall
+DIR = ./include/
 
-DEPS = tree.h common.h
+DEPS = $(DIR)tree.h $(DIR)common.h
 OBJ = tree.o common.o 
 OUT = tree
 
