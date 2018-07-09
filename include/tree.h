@@ -10,12 +10,12 @@
 typedef enum {false, true} bool;
 
 extern void read_input(int, char *[]);
-extern void read_and_serve_stream(const char *, int);
+extern void read_and_serve_stream(const char *, int, bool);
 
-extern void sort_alphabeticly(int, char *[], const char *, int);
+extern void sort_alphabeticly(int, char *[], const char *, int, bool);
 extern int greater_stirng(const char *, const char *);
 
-extern void print_list(int, char *[], const char *, int);
+extern void print_list(int, char *[], const char *, int, bool);
 
 extern void print_amount();
 extern char *current_directory();
