@@ -7,7 +7,7 @@
 /*
  * TODO: Figer out how free list and temp in right way
  * TODO: Define function to concatinate path name
- * TODO: Remove garbage vertical lines
+ * TODO: Make right working vertical lines
  */
 
 #include <stdio.h>
@@ -23,9 +23,10 @@
 #include "include/tree.h"
 #include "include/common.h"
 
-#define STRAIGHT_NODE "\u251c\u2500\u2500"
-#define ANGLE_NODE "\u2514\u2500\u2500"
+#define STRAIGHT_NODE "\u251c\u2500\u2500 "
+#define ANGLE_NODE "\u2514\u2500\u2500 "
 #define STRAIGHT_LINE "\u2502"
+
 #define OPTIONS "af::"
 
 /* ===== Start global variable =====*/
@@ -61,7 +62,7 @@ int main(int argc, char *argv[])
 	exit(EXIT_SUCCESS);
 }
 
-void print_list(int count, char *list[], const char *directory, int nocpl, bool last_directory)
+void print_list(int count, char *list[], const char *directory, int nocpl)
 {
 	size_t num = nocpl, printed = 0;
 	
@@ -79,46 +80,32 @@ void print_list(int count, char *list[], const char *directory, int nocpl, bool 
 		strncat(total_path, "/", sizeof(total_path) - strlen(total_path));
 		strncat(total_path, list[i], sizeof(total_path) - strlen(total_path));
 
+		for(int i = 0; i < nocpl; ++i)
+		{
+			if(i < nocpl - 1)
+			{
+				printf(" ");
+			}
+			printf("  ");
+		}
+
 		if(existing_directory(total_path))
 		{
 			++amount_of_directories;
 			first_print_list = false;
-			for(int i = 0; i < nocpl; ++i)
-			{
-				if(i == 0)
-					printf(STRAIGHT_LINE);
-				printf("   ");
-				if(i < nocpl - 1)
-					printf(STRAIGHT_LINE);
-			}
-			printf("%s "ANSI_COLOR_BRIGHT_BLUE"%s"ANSI_COLOR_RESET"\n",
+			printf("%s"ANSI_COLOR_BRIGHT_BLUE"%s"ANSI_COLOR_RESET"\n",
 				   printed < count ? STRAIGHT_NODE : ANGLE_NODE, list[i]);
-			read_and_serve_stream(total_path, num + 1, printed == count);
+			read_and_serve_stream(total_path, num + 1);
 			++printed;
 		}
 		else
 		{
 			++amount_of_files;
-			for(int i = 0; i < nocpl; ++i)
-			{
-				if(i == 0)
-					printf(STRAIGHT_LINE);
-				printf("   ");
-				if(i < nocpl - 1)
-				{
-					if(!last_directory)
-						printf(STRAIGHT_LINE);
-					else if(last_directory && i != nocpl - 2)
-						printf(STRAIGHT_LINE);
-					else
-						printf(" ");
-				}
-			}
 			if(is_executable(total_path))
-				printf("%s "ANSI_COLOR_BRIGHT_GREEN"%s"ANSI_COLOR_RESET"\n",
+				printf("%s"ANSI_COLOR_BRIGHT_GREEN"%s"ANSI_COLOR_RESET"\n",
 					   printed < count ? STRAIGHT_NODE : ANGLE_NODE, list[i]);
 			else
-				printf("%s "ANSI_COLOR_WHITE_FILE"%s"ANSI_COLOR_RESET"\n",
+				printf("%s"ANSI_COLOR_WHITE_FILE"%s"ANSI_COLOR_RESET"\n",
 					   printed < count ? STRAIGHT_NODE : ANGLE_NODE, list[i]);
 			++printed;
 		}
@@ -143,7 +130,7 @@ int greater_stirng(const char *s1, const char *s2)
 		return 0;
 }
 
-void sort_alphabeticly(int count, char *list[], const char *directory, int nocpl, bool last_directory)
+void sort_alphabeticly(int count, char *list[], const char *directory, int nocpl)
 {
 	for(int i = 0; i <= count; ++i)
 	{
@@ -162,11 +149,11 @@ void sort_alphabeticly(int count, char *list[], const char *directory, int nocpl
 			++secondIndex;
 		}
 	}
-	print_list(count, list, directory, nocpl, last_directory);
+	print_list(count, list, directory, nocpl);
 }
 /* ===== End of sorting =====*/
 
-void read_and_serve_stream(const char *directory, int nocpl, bool last_directory)
+void read_and_serve_stream(const char *directory, int nocpl)
 {
 	DIR *dir;
 	struct dirent *dp;
@@ -192,7 +179,7 @@ void read_and_serve_stream(const char *directory, int nocpl, bool last_directory
 		strcpy(list[count++], dp->d_name);
 	}
 
-	sort_alphabeticly(count - 1, list, directory, nocpl, last_directory);
+	sort_alphabeticly(count - 1, list, directory, nocpl);
 
 //	free(list);
 //	free(temp);
@@ -208,10 +195,10 @@ void read_input(int argc, char *argv[])
 		if(argv[i][0] == '-')
 			continue;
 
-		read_and_serve_stream(argv[i], 0, 0);
+		read_and_serve_stream(argv[i], 0);
 	}
 	if(!defined_path)
-		read_and_serve_stream(current_directory(), 0, 0);
+		read_and_serve_stream(current_directory(), 0);
 }
 
 void print_amount()
