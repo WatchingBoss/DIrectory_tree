@@ -27,10 +27,11 @@
 #define ANGLE_NODE "\u2514\u2500\u2500 "
 #define STRAIGHT_LINE "\u2502"
 
-#define OPTIONS "af::"
+#define OPTIONS "afd::"
 
 /* ===== Start global variable =====*/
 bool print_disappeared = false;
+bool print_dir_only = false;
 bool defined_path = false;
 bool first_print_list = true;
 
@@ -48,7 +49,13 @@ int main(int argc, char *argv[])
 			case 'a':
 				print_disappeared = true;
 				break;
+			case 'd':
+				print_dir_only = true;
+				break;
 			case 'f':
+				break;
+			case '?':
+				user_error("Unknow option %c", option);
 				break;
 			default:
 				break;
@@ -60,6 +67,18 @@ int main(int argc, char *argv[])
 	print_amount();
 
 	exit(EXIT_SUCCESS);
+}
+
+void print_tree(int nocpl)
+{
+	for(int i = 0; i < nocpl; ++i)
+	{
+		if(i < nocpl - 1)
+		{
+			printf(" ");
+		}
+		printf("  ");
+	}
 }
 
 void print_list(int count, char *list[], const char *directory, int nocpl)
@@ -80,17 +99,10 @@ void print_list(int count, char *list[], const char *directory, int nocpl)
 		strncat(total_path, "/", sizeof(total_path) - strlen(total_path));
 		strncat(total_path, list[i], sizeof(total_path) - strlen(total_path));
 
-		for(int i = 0; i < nocpl; ++i)
-		{
-			if(i < nocpl - 1)
-			{
-				printf(" ");
-			}
-			printf("  ");
-		}
-
 		if(existing_directory(total_path))
 		{
+			print_tree(nocpl);
+
 			++amount_of_directories;
 			first_print_list = false;
 			printf("%s"ANSI_COLOR_BRIGHT_BLUE"%s"ANSI_COLOR_RESET"\n",
@@ -101,13 +113,18 @@ void print_list(int count, char *list[], const char *directory, int nocpl)
 		else
 		{
 			++amount_of_files;
-			if(is_executable(total_path))
-				printf("%s"ANSI_COLOR_BRIGHT_GREEN"%s"ANSI_COLOR_RESET"\n",
-					   printed < count ? STRAIGHT_NODE : ANGLE_NODE, list[i]);
-			else
-				printf("%s"ANSI_COLOR_WHITE_FILE"%s"ANSI_COLOR_RESET"\n",
-					   printed < count ? STRAIGHT_NODE : ANGLE_NODE, list[i]);
-			++printed;
+			if(!print_dir_only)
+			{
+				print_tree(nocpl);
+
+				if(is_executable(total_path))
+					printf("%s"ANSI_COLOR_BRIGHT_GREEN"%s"ANSI_COLOR_RESET"\n",
+						   printed < count ? STRAIGHT_NODE : ANGLE_NODE, list[i]);
+				else
+					printf("%s"ANSI_COLOR_WHITE_FILE"%s"ANSI_COLOR_RESET"\n",
+						   printed < count ? STRAIGHT_NODE : ANGLE_NODE, list[i]);
+				++printed;
+			}
 		}
 	}
 }
@@ -181,8 +198,7 @@ void read_and_serve_stream(const char *directory, int nocpl)
 
 	sort_alphabeticly(count - 1, list, directory, nocpl);
 
-//	free(list);
-//	free(temp);
+	free(list);
 }
 
 void read_input(int argc, char *argv[])
